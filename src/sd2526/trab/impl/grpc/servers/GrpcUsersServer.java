@@ -11,7 +11,7 @@ public static final int PORT = 13456;
 	
 	private static Logger Log = Logger.getLogger(GrpcUsersServer.class.getName());
 
-	public GrpcUsersServer() {
+	public GrpcUsersServer() throws Exception {
 		super( Log, Users.SERVICE_NAME, PORT);
 	}
 	
@@ -23,7 +23,7 @@ public static final int PORT = 13456;
 	public static void main(String[] args) {
 		try {
 			new GrpcUsersServer().start();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

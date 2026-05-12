@@ -1,15 +1,24 @@
 package sd2526.trab.impl.grpc.servers;
 
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.security.KeyStore;
 import java.util.List;
 import java.util.logging.Logger;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import sd2526.trab.impl.discovery.Discovery;
 import sd2526.trab.impl.java.servers.AbstractServer;
 import sd2526.trab.impl.utils.IP;
+
+import javax.net.ssl.KeyManagerFactory;
 
 
 public abstract class AbstractGrpcServer extends AbstractServer {
@@ -19,10 +28,26 @@ public abstract class AbstractGrpcServer extends AbstractServer {
 
 	protected final Server server;
 
-	protected AbstractGrpcServer(Logger log, String service, int port) {
-		super(log, service, String.format(SERVER_BASE_URI, IP.hostAddress(), port, GRPC_CTX));
-		
-		var builder = ServerBuilder.forPort(port);
+	protected AbstractGrpcServer(Logger log, String service, int port) throws Exception {
+		super(log, service, String.format(SERVER_BASE_URI, InetAddress.getLocalHost().getHostName(), port, GRPC_CTX));
+
+		String keyStoreFilename = System.getProperty("javax.net.ssl.keyStore");
+		String keyStorePassword = System.getProperty("javax.net.ssl.keyStorePassword");
+
+		KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+		try(FileInputStream input = new FileInputStream(keyStoreFilename)) {
+			keystore.load(input, keyStorePassword.toCharArray());
+		}
+
+		KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(
+				KeyManagerFactory.getDefaultAlgorithm());
+		keyManagerFactory.init(keystore, keyStorePassword.toCharArray());
+
+		SslContext context = GrpcSslContexts.configure(
+				SslContextBuilder.forServer(keyManagerFactory)
+		).build();
+
+		var builder = NettyServerBuilder.forPort(port).sslContext(context);
 		for( var s : controllers( super.serverURI ) )
 			builder.addService( s );
 		

@@ -11,7 +11,7 @@ public static final int PORT = 14567;
 	
 	private static Logger Log = Logger.getLogger(GrpcMessagesServer.class.getName());
 
-	public GrpcMessagesServer() {
+	public GrpcMessagesServer() throws Exception {
 		super( Log, Messages.SERVICE_NAME, PORT);
 	}
 	
@@ -23,7 +23,7 @@ public static final int PORT = 14567;
 	public static void main(String[] args) {
 		try {
 			new GrpcMessagesServer().start();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}	

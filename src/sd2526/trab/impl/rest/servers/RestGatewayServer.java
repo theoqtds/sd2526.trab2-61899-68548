@@ -1,5 +1,6 @@
 package sd2526.trab.impl.rest.servers;
 
+import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.server.ResourceConfig;
@@ -10,7 +11,7 @@ public class RestGatewayServer extends AbstractRestServer {
 
 	private static Logger Log = Logger.getLogger(RestGatewayServer.class.getName());
 
-	RestGatewayServer() {
+	RestGatewayServer() throws UnknownHostException {
 		super(Log, null, PORT);
 	}
 
@@ -22,6 +23,10 @@ public class RestGatewayServer extends AbstractRestServer {
 	}
 
 	public static void main(String[] args) {
-		new RestGatewayServer().start();
+		try {
+			new RestGatewayServer().start();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
