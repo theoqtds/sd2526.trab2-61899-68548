@@ -16,7 +16,7 @@ public class RestGatewayServer extends AbstractRestServer {
 	}
 
 	@Override
-	void registerResources(ResourceConfig config) {
+	protected void registerResources(ResourceConfig config) {
 		config.registerInstances(new RestUsersResource(true), new RestMessagesResource(true));
 //		config.register(.getClass());
 //		config.register(.getClass());

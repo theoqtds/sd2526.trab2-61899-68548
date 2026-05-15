@@ -292,9 +292,10 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 				for (var e : remoteTargets.entrySet()) {
 					var domain = e.getKey();
 					var domainRecipientAddressess = e.getValue();
-					
+
 					jobs.submit(domain, () -> {
 						var res = super.reTry(() -> Clients.AdminMessagesClient.get(domain).remotePostMessage(msg), REMOTE_COMM_DEADLINE);
+						Log.info("remotePost to " + domain + " result: " + res); // tirar dps
 						if (res.error() == ErrorCode.TIMEOUT) {
 							for (var address : domainRecipientAddressess)
 								postToLocalInboxes(Set.of(msg.senderAddress()), msg.cloneWithTimeout(address));

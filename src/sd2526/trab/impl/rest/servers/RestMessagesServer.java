@@ -17,7 +17,7 @@ public class RestMessagesServer extends AbstractRestServer {
 	}
 
 	@Override
-	void registerResources(ResourceConfig config) {
+	protected void registerResources(ResourceConfig config) {
 		config.register(RestMessagesResource.class);
 	}
 

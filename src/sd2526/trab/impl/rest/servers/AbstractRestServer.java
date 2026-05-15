@@ -44,5 +44,5 @@ public abstract class AbstractRestServer extends AbstractServer {
 		}
 	}
 	
-	abstract void registerResources( ResourceConfig config );
+	protected abstract void registerResources( ResourceConfig config );
 }
