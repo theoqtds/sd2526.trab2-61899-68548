@@ -154,7 +154,7 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 		return Clients.AdminUsersClient.get().checkUsers(addresses);
 	}
 
-	private void deliverToKnownLocalRecipients(Collection<String> addresses, Message msg) {
+	public void deliverToKnownLocalRecipients(Collection<String> addresses, Message msg) {
 		Log.info( () -> "deliverToKnownLocalRecipients : local known addresses = %s, msg = %s\n".formatted(addresses, msg));
 
 		DB.transaction((hibernate) -> {
@@ -167,7 +167,7 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 		
 	}
 		
-	private void reportUnknownLocalRecipients(Collection<String> addresses, Message msg) {
+	public void reportUnknownLocalRecipients(Collection<String> addresses, Message msg) {
 		Log.info( () -> "reportUnknownLocalRecipients : unknown addresses = %s, msg = %s\n".formatted(addresses, msg));
 
 		var senderDomain = super.getDomain( msg.senderAddress() );
@@ -189,7 +189,7 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 		}
 	}	
 		
-	private Result<Void> postToLocalInboxes( Collection<String> addresses, Message msg) {
+	public Result<Void> postToLocalInboxes( Collection<String> addresses, Message msg) {
 		Log.info( () -> "postToLocalInboxes : localRecipients = %s, msg = %s\n".formatted(addresses, msg));
 
 		return checkUsers(addresses)
@@ -216,7 +216,7 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 		return postToLocalInboxes(localAddresses, msg);
 	}
 
-	private Result<Void> deleteFromLocalInbox(String mid) {
+	public Result<Void> deleteFromLocalInbox(String mid) {
 		Log.info( () -> "deleteFromLocalInbox : mid = %s\n".formatted(mid));
 		
 		var sql = "SELECT * FROM InboxEntry e WHERE e.mid = '%s'".formatted(mid); 
