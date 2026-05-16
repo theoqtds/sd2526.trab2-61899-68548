@@ -7,10 +7,7 @@ import static sd2526.trab.api.java.Result.ErrorCode.FORBIDDEN;
 import static sd2526.trab.api.java.Result.ErrorCode.INTERNAL_ERROR;
 
 import java.time.Duration;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,10 +27,11 @@ import sd2526.trab.api.java.Result.ErrorCode;
 import sd2526.trab.impl.api.java.AdminMessages;
 import sd2526.trab.impl.db.DB;
 import sd2526.trab.impl.java.clients.Clients;
+import sd2526.trab.impl.kafka.KafkaMessages;
 import sd2526.trab.impl.utils.IP;
 import sd2526.trab.impl.utils.Sleep;
 
-public class JavaMessages extends JavaBaseService implements Messages, AdminMessages {
+public class JavaMessages extends JavaBaseService implements Messages, AdminMessages, KafkaMessages {
 	
 	private static final int REMOTE_COMM_DEADLINE = 90000;
 	private static final long MESSAGES_CACHE_EXPIRATION = 30000;
@@ -43,7 +41,86 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 	final AtomicLong counter = new AtomicLong(0L);	
 	private static Logger Log = Logger.getLogger(JavaMessages.class.getName());
 
-	
+	public record PreparedPost(Message msg, List<String> knownAddresses) {};
+
+	public Result<PreparedPost> prepareKafkaPost(String pwd, Message msg) {
+		return getUser(msg.getSender(), pwd)
+				.thenWith(user -> {
+					var cached = getCachedMessage(msg.originId());
+					if (cached.isOK())
+						return ok(new PreparedPost(cached.value(), List.of()));
+
+					msg.setId("%s+%s".formatted(THIS_DOMAIN, UUID.randomUUID().toString()));
+					messagesCache.put(msg.originId(), new Message(msg));
+					msg.setSender("%s <%s@%s>".formatted(
+							user.getDisplayName(), user.getName(), user.getDomain()));
+					messagesCache.put(msg.getId(), msg);
+
+					var localAddresses = getLocalRecipientAddresses(msg);
+					return checkUsers(localAddresses)
+							.thenWith(unknownAddresses -> {
+								var knownAddresses = new HashSet<>(localAddresses);
+								knownAddresses.removeAll(unknownAddresses);
+								return ok(new PreparedPost(msg, List.copyOf(knownAddresses)));
+							});
+				});
+	}
+
+	public void handleKafkaPostSideEffects(PreparedPost prepared) {
+		var msg = prepared.msg();
+		var knownAddresses = new HashSet<>(getLocalRecipientAddresses(msg));
+		knownAddresses.removeAll(prepared.knownAddresses());
+
+		if (!knownAddresses.isEmpty())
+			reportUnknownLocalRecipients(knownAddresses, msg);
+
+		var remoteAddresses = getRemoteRecipientAddresses(msg);
+		if (!remoteAddresses.isEmpty()) {
+			var remoteTargets = remoteAddresses.stream().collect(
+					Collectors.groupingBy(super::getDomain,
+							Collectors.mapping(a -> a, Collectors.toSet())));
+
+			for (var e : remoteTargets.entrySet()) {
+				var domain = e.getKey();
+				var domainAddresses = e.getValue();
+				jobs.submit(domain, () -> {
+					var res = super.reTry(() ->
+									Clients.AdminMessagesClient.get(domain).remotePostMessage(msg),
+							REMOTE_COMM_DEADLINE);
+					if (res.error() == ErrorCode.TIMEOUT)
+						for (var address : domainAddresses)
+							postToLocalInboxes(Set.of(msg.senderAddress()),
+									msg.cloneWithTimeout(address));
+				});
+			}
+		}
+	}
+
+	public Result<Message> prepareKafkaDelete(String name, String mid, String pwd) {
+		return getUser(name, pwd)
+				.then(() -> getCachedMessage(mid))
+				.thenWith(msg -> name.equals(getName(msg.senderAddress())) ? ok(msg) : error(FORBIDDEN));
+	}
+
+	public void handleKafkaDeleteSideEffects(Message msg) {
+		var domains = msg.getDestination().stream()
+				.map(r -> r.split("@")[1])
+				.collect(Collectors.toSet());
+
+		for (var domain : domains)
+			if (!domain.equals(IP.domain()))
+				jobs.submit(domain, () -> {
+					super.reTry(() ->
+									Clients.AdminMessagesClient.get(domain).remoteDeleteMessage(msg.getId()),
+							REMOTE_COMM_DEADLINE);
+				});
+	}
+
+	public void deleteFromInboxEntry(String name, String mid) {
+		DB.deleteOne(new InboxEntry(mid, name));
+		gcDeletedMessageCache.put(mid, mid);
+	}
+
 	protected final Cache<String, Message> messagesCache = CacheBuilder.newBuilder()
 			.expireAfterWrite(Duration.ofMillis(MESSAGES_CACHE_EXPIRATION))
 			.build();
@@ -140,7 +217,7 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 	}
 	
 	
-	protected Result<User> getUser( String user, String pwd) {
+	public Result<User> getUser( String user, String pwd) {
 		try {
 			var name = user.split("@", 2)[0];
 			return Clients.UsersClient.get().getUser( name, pwd);
@@ -156,6 +233,9 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 
 	public void deliverToKnownLocalRecipients(Collection<String> addresses, Message msg) {
 		Log.info( () -> "deliverToKnownLocalRecipients : local known addresses = %s, msg = %s\n".formatted(addresses, msg));
+
+		//place message in cache
+		messagesCache.put(msg.getId(), msg);
 
 		DB.transaction((hibernate) -> {
 			hibernate.persistOne( msg );
@@ -240,7 +320,13 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 	
 	protected Result<Message> getCachedMessage( String mid ) {
 		var msg = messagesCache.getIfPresent( mid );
-		return msg != null ? ok( msg ) : error( FORBIDDEN );
+		if (msg != null) {
+			return ok(msg);
+		}
+
+		//Fetch from database if not in cache
+		var dbMsg = DB.getOne(mid, Message.class);
+		return dbMsg.isOK() ? dbMsg : error(FORBIDDEN);
 	}
 	
 	public final class JobDispatcher {
@@ -265,12 +351,12 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 	public Result<String> doAsyncPost(User sender, Message msg) {
 
 		return getCachedMessage(msg.originId()).mapValue(Message::getId).orElse(() -> {
-			
-			
-			msg.setId("%s+%04d".formatted(THIS_DOMAIN, counter.incrementAndGet()));
-			
+
+
+			msg.setId("%s+%s".formatted(THIS_DOMAIN, UUID.randomUUID().toString()));
+
 			messagesCache.put(msg.originId(), new Message( msg )); // For ensuring idempotency...
-			
+
 			msg.setSender("%s <%s@%s>".formatted(sender.getDisplayName(), sender.getName(), sender.getDomain()));
 
 			messagesCache.put(msg.getId(), msg); // For enabling delete of messages...
@@ -348,7 +434,7 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 		}	
 		
 		
-		private List<String> getLocalRecipientAddresses(  Message msg ) {
+		public List<String> getLocalRecipientAddresses(  Message msg ) {
 			return msg.getDestination().stream().filter( super::isLocalAddress ).toList();			
 		} 
 

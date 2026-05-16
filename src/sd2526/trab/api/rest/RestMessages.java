@@ -23,6 +23,7 @@ public interface RestMessages {
 	final String PWD = "pwd";
 	final String MID = "mid";
 	final String MBOX = "/mbox";
+	final String HEADER_VERSION = "X-MESSAGES-VERSION";
 
 	@POST
 	@Path("/")

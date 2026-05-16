@@ -9,7 +9,7 @@ public class SyncPoint {
 	
 	private SyncPoint() {
 		this.result = new ConcurrentHashMap<Long, String>();
-		this.version = 0;
+		this.version = -1;
 	}
 	
 	private static SyncPoint instance = null;
@@ -19,6 +19,10 @@ public class SyncPoint {
 			SyncPoint.instance = new SyncPoint();
 		
 		return SyncPoint.instance;
+	}
+
+	public synchronized long getVersion() {
+		return version;
 	}
 	
 	public synchronized String waitForResult( long n ) {

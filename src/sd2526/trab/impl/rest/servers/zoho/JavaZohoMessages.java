@@ -1,4 +1,4 @@
-package sd2526.trab.impl.rest.servers;
+package sd2526.trab.impl.rest.servers.zoho;
 
 import static sd2526.trab.api.java.Result.error;
 import static sd2526.trab.api.java.Result.ok;
@@ -765,7 +765,7 @@ public class JavaZohoMessages extends JavaBaseService implements Messages, Admin
         }
     }
 
-    private Result<User> getUser(
+    public Result<User> getUser(
             String user,
             String pwd) {
 
@@ -795,7 +795,7 @@ public class JavaZohoMessages extends JavaBaseService implements Messages, Admin
         }
     }
 
-    private List<String> getLocalRecipientAddresses(Message msg) {
+    public List<String> getLocalRecipientAddresses(Message msg) {
 
         return msg.getDestination()
                 .stream()

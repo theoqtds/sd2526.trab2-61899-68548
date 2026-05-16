@@ -25,15 +25,15 @@ DISCOVERY_MULTICAST_IP=226.226.226.226
 DISCOVERY_MULTICAST_PORT=2266
 
 
-MESSAGES_REST_PROXY_SERVER_MAINCLASS=sd2526.trab.impl.rest.servers.ZohoMessagesServer
+MESSAGES_REST_PROXY_SERVER_MAINCLASS=sd2526.trab.impl.rest.servers.zoho.ZohoMessagesServer
 MESSAGES_REST_PROXY_PORT=4567
 MESSAGES_REST_PROXY_EXTRA_ARGS=true 1000.YU661YIJ9VE4BCNULTXTIRCEVFRTWJ 3efc9c8e38e397f13c21471e9bbcb57c10d8cd77c3 1000.8cd58c8c22333b6c93f7cde67e72ef55.a7064dd20d5158d353c08ed17462fa11 8634380000000002002 jfrtheo@zohomail.eu
 
 
-MESSAGES_REP_SERVER_MAINCLASS=sd2526.trab.impl.rest.servers.replication.PrimaryMessagesServer
+MESSAGES_REP_SERVER_MAINCLASS=sd2526.trab.impl.rest.servers.kafka.KafkaMessagesServer
 MESSAGES_REP_PORT=4567
-MESSAGES_REP_EXTRA_ARGS_FIRST=mySecret
-MESSAGES_REP_EXTRA_ARGS_OTHER=mySecret
+MESSAGES_REP_EXTRA_ARGS_FIRST=notSoSecretSecret kafka:9092
+MESSAGES_REP_EXTRA_ARGS_OTHER=notSoSecretSecret kafka:9092
 
 
 USERS_KEYSTORES=users.ourorg0,users.ourorg0-server.jks,changeit users.ourorg1,users.ourorg1-server.jks,changeit users.ourorg2,users.ourorg2-server.jks,changeit

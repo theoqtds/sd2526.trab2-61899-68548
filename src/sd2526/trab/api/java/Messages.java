@@ -3,6 +3,8 @@ package sd2526.trab.api.java;
 import java.util.List;
 
 import sd2526.trab.api.Message;
+import sd2526.trab.api.User;
+import sd2526.trab.impl.java.servers.JavaMessages;
 
 public interface Messages {
 	String SERVICE_NAME = "Messages";
@@ -91,6 +93,6 @@ public interface Messages {
 	 * FORBIDDEN if the name does not exist or if the password is not correct.
 	 * BAD_REQUEST if the parameters are invalid (eg., null parameters).
 	 */
-	Result<List<String>> searchInbox(String name, String pwd, String query);	
+	Result<List<String>> searchInbox(String name, String pwd, String query);
 
 }

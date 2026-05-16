@@ -1,4 +1,4 @@
-package sd2526.trab.impl.rest.servers;
+package sd2526.trab.impl.rest.servers.zoho;
 
 import java.net.UnknownHostException;
 import java.util.logging.Logger;
@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import sd2526.trab.api.java.Messages;
+import sd2526.trab.impl.rest.servers.AbstractRestServer;
 
 public class ZohoMessagesServer extends AbstractRestServer {
 
