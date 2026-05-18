@@ -46,7 +46,7 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 	public Result<PreparedPost> prepareKafkaPost(String pwd, Message msg) {
 		return getUser(msg.getSender(), pwd)
 				.thenWith(user -> {
-					var cached = getCachedMessage(msg.originId());
+					var cached = getKafkaCachedMessage(msg.originId());
 					if (cached.isOK())
 						return ok(new PreparedPost(cached.value(), List.of()));
 
@@ -85,7 +85,7 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 				var domainAddresses = e.getValue();
 				jobs.submit(domain, () -> {
 					var res = super.reTry(() ->
-									Clients.AdminMessagesClient.get(domain).remotePostMessage(msg),
+									Clients.KafkaAdminMessagesClient.get(domain).remotePostMessage(msg),
 							REMOTE_COMM_DEADLINE);
 					if (res.error() == ErrorCode.TIMEOUT)
 						for (var address : domainAddresses)
@@ -98,7 +98,7 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 
 	public Result<Message> prepareKafkaDelete(String name, String mid, String pwd) {
 		return getUser(name, pwd)
-				.then(() -> getCachedMessage(mid))
+				.then(() -> getKafkaCachedMessage(mid))
 				.thenWith(msg -> name.equals(getName(msg.senderAddress())) ? ok(msg) : error(FORBIDDEN));
 	}
 
@@ -111,7 +111,7 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 			if (!domain.equals(IP.domain()))
 				jobs.submit(domain, () -> {
 					super.reTry(() ->
-									Clients.AdminMessagesClient.get(domain).remoteDeleteMessage(msg.getId()),
+									Clients.KafkaAdminMessagesClient.get(domain).remoteDeleteMessage(msg.getId()),
 							REMOTE_COMM_DEADLINE);
 				});
 	}
@@ -153,8 +153,8 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 	public Result<String> postMessage(String pwd, Message msg) {
 		Log.info( () -> "postMessage : pwd = %s, msg = %s\n".formatted(pwd, msg));
 
-		return getUser(msg.getSender(), pwd)					
-				.thenWith( (user) -> doAsyncPost( user, msg ));			
+		return getUser(msg.getSender(), pwd)
+				.thenWith( (user) -> doAsyncPost( user, msg ));
 	}
 
 	@Override
@@ -181,17 +181,19 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 	@Override
 	public Result<List<String>> searchInbox(String name, String pwd, String query) {
 		Log.info( () -> "searchInbox : name = %s, pwd = %s, query=%s\n".formatted(name, pwd, query));
-		
+
+		String safeQuery = query.replace("'", "''");
+
 		var sqlExpr = """
 				SELECT m.id FROM Message m
 				INNER JOIN InboxEntry e
 				ON e.mid = m.id 
 				AND e.recipient = '%s'
 				WHERE (upper(m.subject) LIKE '%%%s%%' OR upper(m.contents) LIKE '%%%s%%')
-				""".formatted(name, query.toUpperCase(), query.toUpperCase());
+				""".formatted(name, safeQuery.toUpperCase(), safeQuery.toUpperCase());
 
 		return getUser(name, pwd )
-				.then( () -> DB.select( sqlExpr, String.class));		
+				.then( () -> DB.select( sqlExpr, String.class));
 	}
 	
 	@Override
@@ -241,10 +243,10 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 			hibernate.persistOne( msg );
 			for( var address : addresses )
 				hibernate.persistOne( new InboxEntry( msg.getId(), getName(address) ));
-			
+
 			return ok();
 		});
-		
+
 	}
 		
 	public void reportUnknownLocalRecipients(Collection<String> addresses, Message msg) {
@@ -318,7 +320,7 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 		return deleteFromLocalInbox(mid);
 	}
 	
-	protected Result<Message> getCachedMessage( String mid ) {
+	protected Result<Message> getKafkaCachedMessage( String mid ) {
 		var msg = messagesCache.getIfPresent( mid );
 		if (msg != null) {
 			return ok(msg);
@@ -327,6 +329,11 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 		//Fetch from database if not in cache
 		var dbMsg = DB.getOne(mid, Message.class);
 		return dbMsg.isOK() ? dbMsg : error(FORBIDDEN);
+	}
+
+	protected Result<Message> getCachedMessage( String mid ) {
+		var msg = messagesCache.getIfPresent( mid );
+		return msg != null ? ok( msg ) : error( FORBIDDEN );
 	}
 	
 	public final class JobDispatcher {

@@ -22,7 +22,6 @@ import sd2526.trab.impl.utils.VersionHeaderHandler;
 
 @Singleton
 @Provider
-@Path(RestMessages.PATH)
 public class KafkaMessagesResource extends RestResource implements RestMessages, RestAdminMessages {
     JavaMessages javaMessages;
 

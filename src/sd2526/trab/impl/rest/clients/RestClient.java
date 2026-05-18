@@ -20,6 +20,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import sd2526.trab.api.java.Result;
 import sd2526.trab.api.java.Result.ErrorCode;
+import sd2526.trab.impl.utils.SecretHeaderHandler;
 import sd2526.trab.impl.utils.Sleep;
 
 public class RestClient {
@@ -36,15 +37,21 @@ public class RestClient {
 	final ClientConfig config;
 
 	final WebTarget target;
-	
-	protected RestClient(String serverURI, String servicePath ) {
+
+	//Separate constructor for Kafka implementation
+	protected RestClient(String serverURI, String servicePath, boolean isReplicated ) {
 		this.serverURI = serverURI;
 		this.config = new ClientConfig();
 
 		config.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT);
 		config.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT);
+		if (isReplicated) config.register(SecretHeaderHandler.class);
 		this.client = ClientBuilder.newClient(config);
 		this.target = client.target( serverURI ).path( servicePath );
+	}
+
+	protected RestClient(String serverURI, String servicePath ) {
+		this(serverURI, servicePath, false);
 	}
 
 	protected <T> Result<T> reTry(Supplier<Result<T>> func) {

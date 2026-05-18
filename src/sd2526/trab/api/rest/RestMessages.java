@@ -24,6 +24,7 @@ public interface RestMessages {
 	final String MID = "mid";
 	final String MBOX = "/mbox";
 	final String HEADER_VERSION = "X-MESSAGES-VERSION";
+	final String HEADER_SECRET = "X-SERVER-SECRET";
 
 	@POST
 	@Path("/")

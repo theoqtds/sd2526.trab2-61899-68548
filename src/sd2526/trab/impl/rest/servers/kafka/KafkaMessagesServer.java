@@ -8,7 +8,6 @@ import sd2526.trab.impl.utils.ReplicationManager;
 import sd2526.trab.impl.utils.VersionHeaderHandler;
 
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class KafkaMessagesServer extends AbstractRestServer {
@@ -27,16 +26,11 @@ public class KafkaMessagesServer extends AbstractRestServer {
     }
 
     public static void main(String[] args) {
-        System.out.println("KafkaMessagesServer starting...");
-        System.out.println("Args: " + Arrays.toString(args));
         try {
             String topic = IP.domain();
-            System.out.println("Domain: " + topic);
             String secret = args[0];
             String kafkaAddress = args[1];
-            System.out.println("Initializing ReplicationManager...");
             ReplicationManager.init(topic, kafkaAddress, secret);
-            System.out.println("ReplicationManager initialized");
             new KafkaMessagesServer().start();
         } catch (Throwable e) {
             System.err.println("FATAL ERROR:");
