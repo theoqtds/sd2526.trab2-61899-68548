@@ -58,7 +58,7 @@ public class KafkaMessagesResource extends RestResource implements RestMessages,
         kafkaImpl().handleKafkaPostSideEffects(prepared);
 
         ReplicationManager.getInstance().waitForVersion(offset);
-        VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
+       // VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
         return prepared.msg().getId();
         //return super.resultOrThrow( impl().postMessage(pwd, msg));
     }
@@ -87,7 +87,7 @@ public class KafkaMessagesResource extends RestResource implements RestMessages,
                 List.of(name, mid)
         );
         ReplicationManager.getInstance().waitForVersion(offset);
-        VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
+      //  VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
 
         //super.resultOrThrow( impl().removeInboxMessage(name, mid, pwd) );
 
@@ -105,7 +105,7 @@ public class KafkaMessagesResource extends RestResource implements RestMessages,
         kafkaImpl().handleKafkaDeleteSideEffects(msg);
 
         ReplicationManager.getInstance().waitForVersion(offset);
-        VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
+     //   VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
 
         //super.resultOrThrow( impl().deleteMessage(name, mid, pwd));
     }
@@ -118,7 +118,7 @@ public class KafkaMessagesResource extends RestResource implements RestMessages,
                 List.of(gson.toJson(kafkaImpl().getLocalRecipientAddresses(m)), gson.toJson(m))
         );
         ReplicationManager.getInstance().waitForVersion(offset);
-        VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
+     //   VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
         //super.resultOrThrow( ((AdminMessages)impl()).remotePostMessage(m));
     }
 
@@ -130,7 +130,7 @@ public class KafkaMessagesResource extends RestResource implements RestMessages,
                 List.of(mid)
         );
         ReplicationManager.getInstance().waitForVersion(offset);
-        VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
+      //  VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
         //super.resultOrThrow( ((AdminMessages)impl()).remoteDeleteMessage(mid));
     }
 
@@ -142,7 +142,7 @@ public class KafkaMessagesResource extends RestResource implements RestMessages,
                 List.of(name)
         );
         ReplicationManager.getInstance().waitForVersion(offset);
-        VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
+      //  VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
         //super.resultOrThrow( ((AdminMessages)impl()).remoteDeleteUserInbox(name));
 
     }
@@ -152,7 +152,7 @@ public class KafkaMessagesResource extends RestResource implements RestMessages,
         if( clientVersion != null ) {
             ReplicationManager.getInstance().waitForVersion(clientVersion);
         }
-        VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
+       // VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
     }
 
     private void checkServerSecret() {

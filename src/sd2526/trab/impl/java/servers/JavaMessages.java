@@ -30,6 +30,7 @@ import sd2526.trab.impl.java.clients.Clients;
 import sd2526.trab.impl.kafka.KafkaMessages;
 import sd2526.trab.impl.utils.IP;
 import sd2526.trab.impl.utils.Sleep;
+import sd2526.trab.impl.discovery.Discovery;
 
 public class JavaMessages extends JavaBaseService implements Messages, AdminMessages, KafkaMessages {
 	
@@ -83,15 +84,19 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 			for (var e : remoteTargets.entrySet()) {
 				var domain = e.getKey();
 				var domainAddresses = e.getValue();
-				jobs.submit(domain, () -> {
-					var res = super.reTry(() ->
-									Clients.KafkaAdminMessagesClient.get(domain).remotePostMessage(msg),
-							REMOTE_COMM_DEADLINE);
-					if (res.error() == ErrorCode.TIMEOUT)
-						for (var address : domainAddresses)
-							postToLocalInboxes(Set.of(msg.senderAddress()),
-									msg.cloneWithTimeout(address));
-				});
+				var uris = Discovery.getInstance().knownUrisOf(
+						"%s@%s".formatted(sd2526.trab.api.java.Messages.SERVICE_NAME, domain), 1);
+				Result<Void> res = Result.error(ErrorCode.TIMEOUT);
+				for (var uri : uris) {
+					res = super.reTry(() ->
+									Clients.KafkaAdminMessagesClient.get(uri).remotePostMessage(msg),
+							5000); // timeout defined as 5000 BY REPLICA - see if will not cause any problems
+					if (res.isOK()) break;
+				}
+				if (res.error() == ErrorCode.TIMEOUT)
+					for (var address : domainAddresses)
+						postToLocalInboxes(Set.of(msg.senderAddress()),
+								msg.cloneWithTimeout(address));
 			}
 		}
 	}
@@ -110,9 +115,14 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 		for (var domain : domains)
 			if (!domain.equals(IP.domain()))
 				jobs.submit(domain, () -> {
-					super.reTry(() ->
-									Clients.KafkaAdminMessagesClient.get(domain).remoteDeleteMessage(msg.getId()),
-							REMOTE_COMM_DEADLINE);
+					var uris = Discovery.getInstance().knownUrisOf(
+							"%s@%s".formatted(sd2526.trab.api.java.Messages.SERVICE_NAME, domain), 1);
+					for (var uri : uris) {
+						var res = super.reTry(() ->
+										Clients.KafkaAdminMessagesClient.get(uri).remoteDeleteMessage(msg.getId()),
+								5000);
+						if (res.isOK()) break;
+					}
 				});
 	}
 

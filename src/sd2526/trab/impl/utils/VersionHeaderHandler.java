@@ -13,6 +13,7 @@ import java.io.IOException;
 public class VersionHeaderHandler implements ContainerResponseFilter, ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext reqCtx) throws IOException {
+        version.remove();
         String value = reqCtx.getHeaderString(RestMessages.HEADER_VERSION);
         if( value != null && ! value.isEmpty()) {
             version.set( Long.valueOf( value ) );
@@ -21,10 +22,11 @@ public class VersionHeaderHandler implements ContainerResponseFilter, ContainerR
 
     @Override
     public void filter(ContainerRequestContext reqCtx, ContainerResponseContext resCtx) throws IOException {
-        var value = version.get();
-        if( value != null ) {
-            resCtx.getHeaders().add(RestMessages.HEADER_VERSION, ReplicationManager.getInstance().getVersion());
-        }
+        //changed to always send a versao atual
+        resCtx.getHeaders().add(
+                RestMessages.HEADER_VERSION,
+                (Long) ReplicationManager.getInstance().getVersion()
+        );
     }
 
     public static final ThreadLocal<Long> version = new ThreadLocal<>();
