@@ -10,9 +10,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 import sd2526.trab.impl.discovery.Discovery;
 import sd2526.trab.impl.java.servers.AbstractServer;
-import sd2526.trab.impl.utils.IP;
-
-
 
 public abstract class AbstractRestServer extends AbstractServer {
 	private static final String SERVER_BASE_URI = "https://%s:%s%s";

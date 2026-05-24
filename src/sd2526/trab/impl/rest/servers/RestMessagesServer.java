@@ -9,7 +9,8 @@ import sd2526.trab.api.java.Messages;
 
 public class RestMessagesServer extends AbstractRestServer {
 	public static final int PORT = 4567;
-	
+
+	//por motivos de debug iremos manter o logger - perguntar pro theo
 	private static Logger Log = Logger.getLogger(RestMessagesServer.class.getName());
 
 	RestMessagesServer() throws UnknownHostException {

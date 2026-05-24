@@ -25,26 +25,20 @@ public class ZohoMessagesServer extends AbstractRestServer {
 
     public static void main(String[] args) {
         try {
-            // foamrt <clientId> <clientSecret> <refreshToken> <accountId> <userEmail>
-            // change the way that we receive those args
-            int offset = 0;
-            boolean cleanState = args.length > 0 && Boolean.parseBoolean(args[0]);
-            if (args.length > 1 && (args[1].equals("true") || args[1].equals("false"))) {
-                offset = 1; // skips the bool - check later
-            }
-            String clientId     = args.length > 1 + offset ? args[1 + offset] : "";
-            String clientSecret = args.length > 2 + offset ? args[2 + offset] : "";
-            String refreshToken = args.length > 3 + offset ? args[3 + offset] : "";
-            String accountId    = args.length > 4 + offset ? args[4 + offset] : "";
-            String userEmail    = args.length > 5 + offset ? args[5 + offset] : "";
-            try {
-                JavaZohoMessages.init(clientId, clientSecret, refreshToken, accountId, userEmail, cleanState);
-                new ZohoMessagesServer().start();
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.exit(1);
-            }
+            //tester puts the first arg as true to indicate that has erased all previous mails,
+            //thats why we need this boolean variable
+            boolean cleanState = Boolean.parseBoolean(args[0]);
+            int i = 1;
+            if (args[i].equals("true") || args[i].equals("false")) i++;
 
+            String clientId     = args[i++];
+            String clientSecret = args[i++];
+            String refreshToken = args[i++];
+            String accountId    = args[i++];
+            String userEmail    = args[i];
+
+            JavaZohoMessages.init(clientId, clientSecret, refreshToken, accountId, userEmail, cleanState);
+            new ZohoMessagesServer().start();
         } catch (Exception e) {
             e.printStackTrace();
         }

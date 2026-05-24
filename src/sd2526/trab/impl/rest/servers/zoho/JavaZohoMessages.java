@@ -5,7 +5,6 @@ import static sd2526.trab.api.java.Result.ok;
 import static sd2526.trab.api.java.Result.ErrorCode.*;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -33,8 +32,7 @@ public class JavaZohoMessages extends JavaBaseService implements Messages, Admin
 
     private static final Logger Log = Logger.getLogger(JavaZohoMessages.class.getName());
 
-    private static final String SEPARATOR = "\n------SD2526------\n";
-    private static final String ZOHO_BASE = "https://mail.zoho.eu/api/accounts/";
+    private static final String ZOHO_BASE_URL = "https://mail.zoho.eu/api/accounts/";
     private static final int REMOTE_COMM_DEADLINE = 90000;
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -42,8 +40,6 @@ public class JavaZohoMessages extends JavaBaseService implements Messages, Admin
 
     private final String accountId;
     private final String userEmail;
-
-    private final AtomicLong counter = new AtomicLong(0L);
 
     private OAuth2AccessToken accessToken;
 
@@ -80,6 +76,7 @@ public class JavaZohoMessages extends JavaBaseService implements Messages, Admin
                 .apiSecret(clientSecret)
                 .build(new DefaultApi20() {
 
+                    //needed to scribe (from poms) know where to make the calls
                     @Override
                     public String getAccessTokenEndpoint() {
                         return "https://accounts.zoho.eu/oauth/v2/token";
@@ -177,71 +174,17 @@ public class JavaZohoMessages extends JavaBaseService implements Messages, Admin
         oauthService.execute(req);
     }
 
-    // encoders/decoders
-
-    private String encodeMessage(Message msg) {
-
-        String dest =
-                String.join(",", msg.getDestination());
-
-        return (msg.getContents() == null ? "" : msg.getContents())
-                + SEPARATOR
-                + "id=" + msg.getId() + "\n"
-                + "sender=" + msg.getSender() + "\n"
-                + "creationTime=" + msg.getCreationTime() + "\n"
-                + "destination=" + dest;
-    }
-
-    private Message decodeMessage(String body, String subject) {
-        try {
-            int sepIdx = body.indexOf(SEPARATOR);
-            Log.info("decodeMessage sepIdx: " + sepIdx + " body length: " + body.length());
-
-            if (sepIdx < 0)
-                return null;
-
-            String contents = body.substring(0, sepIdx);
-            String meta = body.substring(sepIdx + SEPARATOR.length());
-
-            Map<String, String> props = new HashMap<>();
-            for (String line : meta.split("\n")) {
-                int eq = line.indexOf('=');
-                if (eq > 0) {
-                    props.put(line.substring(0, eq).trim(), line.substring(eq + 1).trim());
-                }
-            }
-
-            Message msg = new Message();
-            msg.setId(props.get("id"));
-            msg.setSender(props.get("sender"));
-            msg.setCreationTime(Long.parseLong(props.getOrDefault("creationTime", "0")));
-            msg.setSubject(subject);
-            msg.setContents(contents);
-
-            String destStr = props.get("destination");
-            if (destStr != null && !destStr.isEmpty()) {
-                msg.setDestination(new HashSet<>(Arrays.asList(destStr.split(","))));
-            }
-
-            return msg;
-
-        } catch (Exception e) {
-            Log.warning("Failed to decode message: " + e.getMessage());
-            return null;
-        }
-    }
-
     // part related to zoho inbox msgs
 
     private void deleteAllEmails() throws Exception {
-        String url = ZOHO_BASE + accountId + "/messages/view?limit=200";
+        String url = ZOHO_BASE_URL + accountId + "/messages/view?limit=200";
         JsonNode root = zohoGet(url);
         JsonNode data = root.path("data");
 
         if (data.isArray()) {
             for (JsonNode email : data) {
                 String msgId = email.path("messageId").asText();
-                zohoDelete(ZOHO_BASE + accountId + "/folders/8634380000000002014/messages/" + msgId);
+                zohoDelete(ZOHO_BASE_URL + accountId + "/folders/8634380000000002014/messages/" + msgId);
             }
         }
     }
@@ -259,11 +202,11 @@ public class JavaZohoMessages extends JavaBaseService implements Messages, Admin
         emailBody.put("content", msg.getContents() == null ? "" : msg.getContents());
 
         String json = mapper.writeValueAsString(emailBody);
-        zohoPost(ZOHO_BASE + accountId + "/messages", json);
+        zohoPost(ZOHO_BASE_URL + accountId + "/messages", json);
     }
 
     private List<Message> getAllFromZoho() throws Exception {
-        String url = ZOHO_BASE + accountId + "/messages/view?limit=200";
+        String url = ZOHO_BASE_URL + accountId + "/messages/view?limit=200";
         JsonNode root = zohoGet(url);
         JsonNode data = root.path("data");
 
@@ -313,27 +256,9 @@ public class JavaZohoMessages extends JavaBaseService implements Messages, Admin
     }
 
 
-    private String reconstructBodyFromSummary(String summary) {
-        // format Mailcontents id sender creationTime destination then convert to separator format
-        int markerIdx = summary.indexOf("SD2526 ");
-        if (markerIdx < 0) return "";
-
-        String contents = summary.substring(0, markerIdx).trim();
-        String meta = summary.substring(markerIdx + "SD2526 ".length());
-
-        // Converts space-separated props back to newline format
-        // check later if all that is necessary
-        // "id=xxx sender=xxx creationTime=xxx destination=xxx"
-        String metaNewlines = meta
-                .replace(" sender=", "\nsender=")
-                .replace(" creationTime=", "\ncreationTime=")
-                .replace(" destination=", "\ndestination=");
-
-        return contents + SEPARATOR + metaNewlines;
-    }
 
     private void deleteFromZoho(String mid) throws Exception {
-        String url = ZOHO_BASE + accountId + "/messages/view?limit=200";
+        String url = ZOHO_BASE_URL + accountId + "/messages/view?limit=200";
         JsonNode root = zohoGet(url);
         JsonNode data = root.path("data");
 
@@ -342,7 +267,7 @@ public class JavaZohoMessages extends JavaBaseService implements Messages, Admin
                 String subject = email.path("subject").asText("");
                 if (subject.startsWith("SD2526|" + mid + "|")) {
                     String zohoMsgId = email.path("messageId").asText();
-                    zohoDelete(ZOHO_BASE + accountId + "/folders/8634380000000002014/messages/" + zohoMsgId);
+                    zohoDelete(ZOHO_BASE_URL + accountId + "/folders/8634380000000002014/messages/" + zohoMsgId);
                 }
             }
         }
@@ -369,10 +294,7 @@ public class JavaZohoMessages extends JavaBaseService implements Messages, Admin
 
     private Result<String> doPost(User sender, Message msg) {
 
-        msg.setId(
-                "%s+%04d".formatted(
-                        THIS_DOMAIN,
-                        counter.incrementAndGet()));
+        msg.setId(THIS_DOMAIN + "+" + UUID.randomUUID().toString());
 
         msg.setSender(
                 "%s <%s@%s>".formatted(
@@ -583,7 +505,7 @@ public class JavaZohoMessages extends JavaBaseService implements Messages, Admin
         return getUser(name, pwd).thenWith(u -> {
             try {
                 String userAddress = name + "@" + THIS_DOMAIN;
-                String url = ZOHO_BASE + accountId + "/messages/view?limit=200";
+                String url = ZOHO_BASE_URL + accountId + "/messages/view?limit=200";
                 JsonNode root = zohoGet(url);
                 JsonNode data = root.path("data");
 
@@ -598,10 +520,10 @@ public class JavaZohoMessages extends JavaBaseService implements Messages, Admin
 
                         if (msg == null || !msg.getDestination().contains(userAddress)) continue;
 
-                        // Apaga este email específico
-                        zohoDelete(ZOHO_BASE + accountId + "/folders/8634380000000002014/messages/" + zohoMsgId);
+                        // apaga este email
+                        zohoDelete(ZOHO_BASE_URL + accountId + "/folders/8634380000000002014/messages/" + zohoMsgId);
 
-                        // Se ainda há outros destinatários, guarda sem este
+                        // se ainda ha outros destinatarios, guarda sem este
                         msg.getDestination().remove(userAddress);
                         if (!msg.getDestination().isEmpty())
                             storeInZoho(msg);
@@ -691,14 +613,15 @@ public class JavaZohoMessages extends JavaBaseService implements Messages, Admin
 
     @Override
     public Result<Void> remotePostMessage(Message msg) {
-        Log.info("remotePostMessage called: " + msg.getId());
+        Log.info("remotePostMessage called: " + msg.getId()
+                + " dest=" + msg.getDestination()
+                + " sender=" + msg.getSender());
         try {
             storeInZoho(msg);
             Log.info("storeInZoho SUCCESS for: " + msg.getId());
             return ok();
         } catch (Exception e) {
             e.printStackTrace();
-            Log.warning("remotePostMessage failed: " + e.getMessage());
             return error(INTERNAL_ERROR);
         }
     }

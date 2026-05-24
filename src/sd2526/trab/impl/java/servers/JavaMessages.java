@@ -11,7 +11,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -29,7 +28,6 @@ import sd2526.trab.impl.db.DB;
 import sd2526.trab.impl.java.clients.Clients;
 import sd2526.trab.impl.kafka.KafkaMessages;
 import sd2526.trab.impl.utils.IP;
-import sd2526.trab.impl.utils.Sleep;
 import sd2526.trab.impl.discovery.Discovery;
 
 public class JavaMessages extends JavaBaseService implements Messages, AdminMessages, KafkaMessages {
@@ -39,7 +37,7 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 	private static final long DIRTY_INBOX_CACHE_EXPIRATION = 10000;
 
 	final JobDispatcher jobs;
-	final AtomicLong counter = new AtomicLong(0L);	
+
 	private static Logger Log = Logger.getLogger(JavaMessages.class.getName());
 
 	public record PreparedPost(Message msg, List<String> knownAddresses) {};
