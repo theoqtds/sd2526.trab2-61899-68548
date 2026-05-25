@@ -112,7 +112,6 @@ public class KafkaMessagesResource extends RestResource implements RestMessages,
 
     @Override
     public void remotePostMessage(Message m) {
-        checkServerSecret();
         long offset = ReplicationManager.getInstance().publish(
                 "deliverToKnownLocalRecipients",
                 List.of(gson.toJson(kafkaImpl().getLocalRecipientAddresses(m)), gson.toJson(m))
@@ -124,7 +123,6 @@ public class KafkaMessagesResource extends RestResource implements RestMessages,
 
     @Override
     public void remoteDeleteMessage(String mid) {
-        checkServerSecret();
         long offset = ReplicationManager.getInstance().publish(
                 "deleteFromLocalInbox",
                 List.of(mid)
@@ -136,7 +134,6 @@ public class KafkaMessagesResource extends RestResource implements RestMessages,
 
     @Override
     public void remoteDeleteUserInbox(String name) {
-        checkServerSecret();
         long offset = ReplicationManager.getInstance().publish(
                 "remoteDeleteUserInbox",
                 List.of(name)
@@ -153,14 +150,6 @@ public class KafkaMessagesResource extends RestResource implements RestMessages,
             ReplicationManager.getInstance().waitForVersion(clientVersion);
         }
        // VersionHeaderHandler.version.set(ReplicationManager.getInstance().getVersion());
-    }
-
-    private void checkServerSecret() {
-        String incoming = headers.getHeaderString("X-SERVER-SECRET");
-        String expected = ReplicationManager.getInstance().getSecret();
-        if (expected != null && !expected.equals(incoming)) {
-            throw new WebApplicationException(Response.Status.FORBIDDEN);
-        }
     }
 }
 

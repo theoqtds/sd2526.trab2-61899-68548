@@ -6,6 +6,8 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import sd2526.trab.api.java.Messages;
+import sd2526.trab.impl.utils.Secret;
+import sd2526.trab.impl.utils.SecretHeaderHandler;
 
 public class RestMessagesServer extends AbstractRestServer {
 	public static final int PORT = 4567;
@@ -20,10 +22,14 @@ public class RestMessagesServer extends AbstractRestServer {
 	@Override
 	protected void registerResources(ResourceConfig config) {
 		config.register(RestMessagesResource.class);
+		config.register(SecretHeaderHandler.class);
 	}
 
 	public static void main(String[] args) {
 		try {
+			String secret = args[0];
+			Secret.init(secret);
+
 			new RestMessagesServer().start();
 		} catch (Exception e) {
 			e.printStackTrace();

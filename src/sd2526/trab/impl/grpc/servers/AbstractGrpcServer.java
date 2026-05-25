@@ -10,12 +10,14 @@ import java.util.logging.Logger;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerInterceptors;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import sd2526.trab.impl.discovery.Discovery;
 import sd2526.trab.impl.java.servers.AbstractServer;
+import sd2526.trab.impl.utils.GrpcSecretServerInterceptor;
 import sd2526.trab.impl.utils.IP;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -48,8 +50,11 @@ public abstract class AbstractGrpcServer extends AbstractServer {
 		).build();
 
 		var builder = NettyServerBuilder.forPort(port).sslContext(context);
+
+		var secretInterceptor = new GrpcSecretServerInterceptor();
+
 		for( var s : controllers( super.serverURI ) )
-			builder.addService( s );
+			builder.addService( ServerInterceptors.intercept( s,  secretInterceptor ) );
 		
 		this.server = builder.build();
 	}

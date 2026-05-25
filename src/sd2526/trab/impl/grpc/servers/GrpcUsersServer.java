@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import sd2526.trab.api.java.Users;
+import sd2526.trab.impl.utils.Secret;
 
 public class GrpcUsersServer extends AbstractGrpcServer {
 public static final int PORT = 13456;
@@ -22,6 +23,9 @@ public static final int PORT = 13456;
 	
 	public static void main(String[] args) {
 		try {
+			String secret = args[0];
+			Secret.init(secret);
+
 			new GrpcUsersServer().start();
 		} catch (Exception e) {
 			e.printStackTrace();

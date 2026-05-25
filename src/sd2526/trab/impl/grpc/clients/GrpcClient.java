@@ -19,6 +19,7 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import sd2526.trab.api.java.Result;
 import sd2526.trab.api.java.Result.ErrorCode;
+import sd2526.trab.impl.utils.GrpcSecretClientInterceptor;
 
 import javax.net.ssl.TrustManagerFactory;
 
@@ -50,6 +51,7 @@ public class GrpcClient {
 			this.channel = NettyChannelBuilder
 					.forAddress(serverURI.getHost(), serverURI.getPort())
 					.sslContext(context)
+					.intercept(new GrpcSecretClientInterceptor())
 					.enableRetry()
 					.build();
 

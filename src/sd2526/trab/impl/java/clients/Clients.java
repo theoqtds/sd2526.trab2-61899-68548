@@ -20,6 +20,4 @@ public class Clients {
 
 	public static final ClientFactory<AdminMessages> AdminMessagesClient = new ClientFactory<>(Messages.SERVICE_NAME, RestAdminMessagesClient::new, GrpcAdminMessagesClient::new);
 
-	public static final ClientFactory<AdminMessages> KafkaAdminMessagesClient = new ClientFactory<>(Messages.SERVICE_NAME, KafkaAdminMessagesClient::new, null);
-
 }

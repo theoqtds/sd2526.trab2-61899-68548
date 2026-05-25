@@ -11,7 +11,7 @@ import sd2526.trab.impl.api.rest.RestAdminMessages;
 public class RestAdminMessagesClient extends RestClient implements AdminMessages {
 
 	public RestAdminMessagesClient(String serverURI) {
-		super(serverURI, RestMessages.PATH);
+		super(serverURI, RestMessages.PATH, true);
 	}
 
 	@Override

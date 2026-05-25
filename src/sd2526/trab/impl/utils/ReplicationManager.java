@@ -17,12 +17,10 @@ public class ReplicationManager {
 
     private final String topic;
     private final String kafkaAddress;
-    private final String secret;
 
-    private ReplicationManager(String topic, String kafkaAddress, String secret) {
+    private ReplicationManager(String topic, String kafkaAddress) {
         this.topic = topic;
         this.kafkaAddress = kafkaAddress;
-        this.secret = secret;
 
         KafkaUtils.createTopic(topic); //Attempts to create a topic (might already exist)
 
@@ -38,8 +36,8 @@ public class ReplicationManager {
         syncPoint = SyncPoint.getSyncPoint();
     }
 
-    public static void init(String topic, String kafkaAddress, String secret) {
-        instance = new ReplicationManager(topic, kafkaAddress, secret);
+    public static void init(String topic, String kafkaAddress) {
+        instance = new ReplicationManager(topic, kafkaAddress);
     }
 
     public static ReplicationManager getInstance() {
@@ -48,10 +46,6 @@ public class ReplicationManager {
 
     public long getVersion() {
         return syncPoint.getVersion();
-    }
-
-    public String getSecret() {
-        return secret;
     }
 
     public void waitForVersion(long n) {

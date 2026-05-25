@@ -3,9 +3,7 @@ package sd2526.trab.impl.rest.servers.kafka;
 import org.glassfish.jersey.server.ResourceConfig;
 import sd2526.trab.api.java.Messages;
 import sd2526.trab.impl.rest.servers.AbstractRestServer;
-import sd2526.trab.impl.utils.IP;
-import sd2526.trab.impl.utils.ReplicationManager;
-import sd2526.trab.impl.utils.VersionHeaderHandler;
+import sd2526.trab.impl.utils.*;
 
 import java.net.UnknownHostException;
 import java.util.logging.Logger;
@@ -22,7 +20,8 @@ public class KafkaMessagesServer extends AbstractRestServer {
     @Override
     protected void registerResources(ResourceConfig config) {
         config.registerInstances(new KafkaMessagesResource());
-        config.registerInstances(new VersionHeaderHandler());
+        config.register(VersionHeaderHandler.class);
+        config.register(SecretHeaderHandler.class);
     }
 
     public static void main(String[] args) {
@@ -30,7 +29,8 @@ public class KafkaMessagesServer extends AbstractRestServer {
             String topic = IP.domain();
             String secret = args[0];
             String kafkaAddress = args[1];
-            ReplicationManager.init(topic, kafkaAddress, secret);
+            Secret.init(secret);
+            ReplicationManager.init(topic, kafkaAddress);
             new KafkaMessagesServer().start();
         } catch (Throwable e) {
             System.err.println("FATAL ERROR:");

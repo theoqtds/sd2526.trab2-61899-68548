@@ -38,14 +38,14 @@ public class RestClient {
 
 	final WebTarget target;
 
-	//Separate constructor for Kafka implementation
-	protected RestClient(String serverURI, String servicePath, boolean isReplicated ) {
+	//Separate constructor for server-to-server communication
+	protected RestClient(String serverURI, String servicePath, boolean isAdmin ) {
 		this.serverURI = serverURI;
 		this.config = new ClientConfig();
 
 		config.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT);
 		config.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT);
-		if (isReplicated) config.register(SecretHeaderHandler.class);
+		if (isAdmin) config.register(SecretHeaderHandler.class);
 		this.client = ClientBuilder.newClient(config);
 		this.target = client.target( serverURI ).path( servicePath );
 	}

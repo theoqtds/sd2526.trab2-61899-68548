@@ -17,14 +17,17 @@ public interface RestAdminMessages {
 	@POST
 	@Path(ADMIN)
 	@Consumes(MediaType.APPLICATION_JSON)
+	@AdminSecret
 	void remotePostMessage(Message m);
 
 	@DELETE
 	@Path(ADMIN + "/{" + MID + "}")
+	@AdminSecret
 	void remoteDeleteMessage(@PathParam(MID) String mid);
 	
 	@DELETE
 	@Path(ADMIN + "/" + INBOX + "/{" + NAME + "}")
+	@AdminSecret
 	void remoteDeleteUserInbox(@PathParam(NAME) String name);
 
 }

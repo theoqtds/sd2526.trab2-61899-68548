@@ -87,7 +87,7 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 				Result<Void> res = Result.error(ErrorCode.TIMEOUT);
 				for (var uri : uris) {
 					res = super.reTry(() ->
-									Clients.KafkaAdminMessagesClient.get(uri).remotePostMessage(msg),
+									Clients.AdminMessagesClient.get(uri).remotePostMessage(msg),
 							5000); // timeout defined as 5000 BY REPLICA - see if will not cause any problems
 					if (res.isOK()) break;
 				}
@@ -117,7 +117,7 @@ public class JavaMessages extends JavaBaseService implements Messages, AdminMess
 							"%s@%s".formatted(sd2526.trab.api.java.Messages.SERVICE_NAME, domain), 1);
 					for (var uri : uris) {
 						var res = super.reTry(() ->
-										Clients.KafkaAdminMessagesClient.get(uri).remoteDeleteMessage(msg.getId()),
+										Clients.AdminMessagesClient.get(uri).remoteDeleteMessage(msg.getId()),
 								5000);
 						if (res.isOK()) break;
 					}

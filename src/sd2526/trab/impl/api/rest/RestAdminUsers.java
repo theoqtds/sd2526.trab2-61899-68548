@@ -16,5 +16,6 @@ public interface RestAdminUsers {
 	@Path(ADMIN)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@AdminSecret
 	Set<String> checkUsers( Set<String> addresses);
 }

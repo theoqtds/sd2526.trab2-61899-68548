@@ -14,7 +14,7 @@ import sd2526.trab.impl.api.rest.RestAdminUsers;
 public class RestAdminUsersClient extends RestClient implements AdminUsers {
 
 	public RestAdminUsersClient(String serverURI) {
-		super(serverURI, RestUsers.PATH);
+		super(serverURI, RestUsers.PATH, true);
 	}
 
 	@Override
