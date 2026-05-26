@@ -1,4 +1,4 @@
-package sd2526.trab.impl.utils;
+package sd2526.trab.impl.utils.replication;
 
 import com.google.gson.Gson;
 import sd2526.trab.api.Message;

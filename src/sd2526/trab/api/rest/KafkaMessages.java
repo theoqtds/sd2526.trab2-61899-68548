@@ -1,4 +1,4 @@
-package sd2526.trab.impl.kafka;
+package sd2526.trab.api.rest;
 
 import sd2526.trab.api.Message;
 import sd2526.trab.api.User;

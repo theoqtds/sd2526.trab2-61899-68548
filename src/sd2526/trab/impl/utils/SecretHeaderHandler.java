@@ -24,7 +24,6 @@ public class SecretHeaderHandler implements ClientRequestFilter, ContainerReques
         if (secret != null) {
             requestContext.getHeaders().add(RestMessages.HEADER_SECRET, secret);
         }
-        System.out.println("Secret header sent");
     }
 
     @Override
@@ -40,6 +39,5 @@ public class SecretHeaderHandler implements ClientRequestFilter, ContainerReques
 
             requestContext.abortWith(response);
         }
-        System.out.println("Secret header received");
     }
 }

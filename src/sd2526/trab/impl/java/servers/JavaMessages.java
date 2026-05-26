@@ -26,7 +26,7 @@ import sd2526.trab.api.java.Result.ErrorCode;
 import sd2526.trab.impl.api.java.AdminMessages;
 import sd2526.trab.impl.db.DB;
 import sd2526.trab.impl.java.clients.Clients;
-import sd2526.trab.impl.kafka.KafkaMessages;
+import sd2526.trab.api.rest.KafkaMessages;
 import sd2526.trab.impl.utils.IP;
 import sd2526.trab.impl.discovery.Discovery;
 

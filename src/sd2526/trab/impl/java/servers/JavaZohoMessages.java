@@ -1,4 +1,4 @@
-package sd2526.trab.impl.rest.servers.zoho;
+package sd2526.trab.impl.java.servers;
 
 import static sd2526.trab.api.java.Result.error;
 import static sd2526.trab.api.java.Result.ok;
@@ -26,7 +26,6 @@ import sd2526.trab.api.java.Result;
 import sd2526.trab.api.java.Result.ErrorCode;
 import sd2526.trab.impl.api.java.AdminMessages;
 import sd2526.trab.impl.java.clients.Clients;
-import sd2526.trab.impl.java.servers.JavaBaseService;
 
 public class JavaZohoMessages extends JavaBaseService implements Messages, AdminMessages {
 

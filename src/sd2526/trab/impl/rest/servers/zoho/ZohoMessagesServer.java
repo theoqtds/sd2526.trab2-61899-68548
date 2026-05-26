@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import sd2526.trab.api.java.Messages;
+import sd2526.trab.impl.java.servers.JavaZohoMessages;
 import sd2526.trab.impl.rest.servers.AbstractRestServer;
 
 public class ZohoMessagesServer extends AbstractRestServer {

@@ -1,11 +1,7 @@
-package sd2526.trab.impl.utils;
+package sd2526.trab.impl.utils.replication;
 
 import com.google.gson.Gson;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import sd2526.trab.impl.kafka.KafkaPublisher;
-import sd2526.trab.impl.kafka.KafkaSubscriber;
-import sd2526.trab.impl.kafka.KafkaUtils;
-import sd2526.trab.impl.kafka.RecordProcessor;
 
 import java.util.List;
 

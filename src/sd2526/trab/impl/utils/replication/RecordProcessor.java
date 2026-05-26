@@ -1,4 +1,4 @@
-package sd2526.trab.impl.kafka;
+package sd2526.trab.impl.utils.replication;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 

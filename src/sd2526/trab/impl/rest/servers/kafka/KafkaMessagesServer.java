@@ -4,6 +4,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import sd2526.trab.api.java.Messages;
 import sd2526.trab.impl.rest.servers.AbstractRestServer;
 import sd2526.trab.impl.utils.*;
+import sd2526.trab.impl.utils.replication.ReplicationManager;
+import sd2526.trab.impl.utils.replication.VersionHeaderHandler;
 
 import java.net.UnknownHostException;
 import java.util.logging.Logger;
@@ -31,6 +33,7 @@ public class KafkaMessagesServer extends AbstractRestServer {
             String kafkaAddress = args[1];
             Secret.init(secret);
             ReplicationManager.init(topic, kafkaAddress);
+
             new KafkaMessagesServer().start();
         } catch (Throwable e) {
             System.err.println("FATAL ERROR:");

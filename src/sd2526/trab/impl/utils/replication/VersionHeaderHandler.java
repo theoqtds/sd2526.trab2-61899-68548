@@ -1,4 +1,4 @@
-package sd2526.trab.impl.utils;
+package sd2526.trab.impl.utils.replication;
 
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
@@ -25,7 +25,7 @@ public class VersionHeaderHandler implements ContainerResponseFilter, ContainerR
         //changed to always send a versao atual
         resCtx.getHeaders().add(
                 RestMessages.HEADER_VERSION,
-                (Long) ReplicationManager.getInstance().getVersion()
+                ReplicationManager.getInstance().getVersion()
         );
     }
 

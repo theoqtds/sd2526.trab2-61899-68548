@@ -1,4 +1,4 @@
-package sd2526.trab.impl.kafka;
+package sd2526.trab.impl.utils.replication;
 
 import java.util.ArrayList;
 import java.util.List;
